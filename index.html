@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing-Mix Quiz – Netflix</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #141414;
+    color: #fff;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 40px 32px 60px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .header {
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #e50914;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+  }
+
+  .header-left { flex: 1; }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #e50914;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 6px;
+  }
+
+  h1 span { color: #e50914; }
+
+  .header-sub { font-size: 12.5px; color: #777; }
+
+  .score-display { text-align: right; flex-shrink: 0; }
+  .score-num { font-size: 32px; font-weight: 900; color: #e50914; line-height: 1; }
+  .score-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #555; margin-top: 3px; }
+
+  .progress-wrap { margin-bottom: 28px; display: flex; align-items: center; gap: 14px; }
+  .progress-track { flex: 1; height: 3px; background: #2a2a2a; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #e50914; border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+  .progress-label { font-size: 11px; font-weight: 700; color: #555; white-space: nowrap; min-width: 44px; text-align: right; }
+  .progress-label span { color: #e50914; }
+
+  .question-card {
+    background: #1f1f1f;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    border: 1px solid #2a2a2a;
+    transition: border-color 0.25s;
+  }
+
+  .question-card.correct { border-color: #22c55e; }
+  .question-card.wrong   { border-color: #e50914; }
+
+  .q-header { display: flex; align-items: stretch; }
+
+  .q-bar { width: 5px; background: #e50914; flex-shrink: 0; transition: background 0.25s; }
+  .question-card.correct .q-bar { background: #22c55e; }
+
+  .q-content { padding: 16px 18px; flex: 1; display: flex; gap: 12px; align-items: flex-start; }
+
+  .q-meta-col { flex-shrink: 0; display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+
+  .q-num { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: #e50914; }
+
+  .q-tag {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #555; background: #2a2a2a; border-radius: 4px; padding: 2px 7px; white-space: nowrap;
+  }
+
+  .q-text { font-size: 14.5px; font-weight: 700; color: #fff; line-height: 1.45; }
+
+  .options {
+    padding: 4px 18px 16px 23px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .option {
+    display: flex; align-items: center; gap: 10px;
+    background: #2a2a2a; border: 1.5px solid #333; border-radius: 7px;
+    padding: 11px 14px; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .option:hover:not(.disabled) { border-color: #e50914; background: #2f1a1b; }
+  .option.disabled { cursor: default; }
+  .option.selected-correct { border-color: #22c55e; background: #0f2a1a; }
+  .option.selected-wrong   { border-color: #e50914; background: #2a1515; }
+  .option.reveal-correct   { border-color: #22c55e; background: #0f2a1a; }
+
+  .opt-letter {
+    width: 24px; height: 24px; border-radius: 50%; background: #3a3a3a;
+    font-size: 11px; font-weight: 800; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; color: #888;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .option.selected-correct .opt-letter { background: #22c55e; color: #fff; }
+  .option.selected-wrong   .opt-letter { background: #e50914; color: #fff; }
+  .option.reveal-correct   .opt-letter { background: #22c55e; color: #fff; }
+
+  .opt-text { font-size: 12.5px; color: #ccc; line-height: 1.4; font-weight: 500; }
+  .option.selected-correct .opt-text,
+  .option.reveal-correct   .opt-text { color: #86efac; }
+  .option.selected-wrong   .opt-text { color: #fca5a5; }
+
+  .feedback { margin: 0 18px 14px 23px; padding: 10px 14px; border-radius: 6px; font-size: 12.5px; line-height: 1.55; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #0f2a1a; border-left: 3px solid #22c55e; color: #86efac; }
+  .feedback.wrong-fb   { background: #2a1515; border-left: 3px solid #e50914; color: #fca5a5; }
+  .feedback strong { color: #fff; }
+
+  .result-screen {
+    display: none; text-align: center; padding: 48px 20px;
+    background: #1f1f1f; border-radius: 12px; border: 1px solid #2a2a2a; margin-bottom: 24px;
+  }
+  .result-screen.show { display: block; }
+  .result-big { font-size: 72px; font-weight: 900; color: #e50914; line-height: 1; margin-bottom: 8px; }
+  .result-sub { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .result-note { font-size: 13px; color: #777; margin-bottom: 24px; }
+  .result-grade { display: inline-block; background: #2a2a2a; border-radius: 8px; padding: 10px 24px; font-size: 13px; font-weight: 700; color: #aaa; }
+  .result-grade span { color: #e50914; }
+
+  .controls { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .btn { padding: 11px 22px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; letter-spacing: 0.04em; transition: opacity 0.15s, transform 0.1s; font-family: inherit; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: #e50914; color: #fff; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-ghost { background: #2a2a2a; color: #aaa; }
+  .btn-ghost:hover { background: #333; color: #fff; }
+
+  .footer { margin-top: 40px; border-top: 1px solid #2a2a2a; padding-top: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .footer-note { font-size: 11px; color: #444; }
+  .footer-authors { font-size: 11px; color: #555; font-weight: 500; }
+
+  @media (max-width: 560px) {
+    body { padding: 20px 14px 40px; }
+    h1 { font-size: 22px; }
+    .options { grid-template-columns: 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .score-display { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="eyebrow">Fragerunde · Marketing-Mix</div>
+    <h1>Quiz: Die 4Ps am Beispiel <span>Netflix</span></h1>
+    <p class="header-sub">Wähle die richtige Antwort – nur eine ist korrekt.</p>
+  </div>
+  <div class="score-display">
+    <div class="score-num" id="scoreNum">0</div>
+    <div class="score-label">Punkte</div>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label"><span id="answeredCount">0</span> / 10</div>
+</div>
+
+<div id="quiz"></div>
+
+<div class="result-screen" id="resultScreen">
+  <div class="result-big" id="resultScore"></div>
+  <div class="result-sub" id="resultTitle"></div>
+  <div class="result-note" id="resultNote"></div>
+  <div class="result-grade" id="resultGrade"></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-primary" id="btnReveal" onclick="revealAll()">▶ Alle Antworten aufdecken</button>
+  <button class="btn btn-ghost" onclick="resetAll()">↺ Neu starten</button>
+</div>
+
+<footer class="footer">
+  <span class="footer-note">Marketing-Mix Fragerunde · 4Ps am Beispiel Netflix</span>
+  <span class="footer-authors">Lazar · Omar · Julian</span>
+</footer>
+
+<script>
+const questions = [
+  {
+    tag: "Definition",
+    text: "Was versteht man unter dem Begriff 'Marketing-Mix'?",
+    options: [
+      "Eine Mischung aus verschiedenen Produkten im Sortiment",
+      "Das koordinierte Zusammenspiel der vier Instrumente Product, Price, Place & Promotion",
+      "Die Strategie, möglichst viele Werbeanzeigen zu schalten",
+      "Ein Verfahren zur Berechnung des Marktanteils"
+    ],
+    correct: 1,
+    explanation: "Der Marketing-Mix beschreibt das abgestimmte Zusammenspiel der 4Ps mit dem Ziel, Kundenbedürfnisse profitabel zu erfüllen."
+  },
+  {
+    tag: "Product",
+    text: "Was macht Netflix-Eigenproduktionen (Originals) strategisch so wertvoll?",
+    options: [
+      "Sie sind günstiger zu produzieren als lizenzierter Content",
+      "Sie können auch auf anderen Plattformen gezeigt werden",
+      "Sie sind exklusiv bei Netflix verfügbar und schaffen einen einzigartigen Abschlussgrund",
+      "Sie werden ausschließlich in den USA produziert"
+    ],
+    correct: 2,
+    explanation: "Originals wie Stranger Things sind nur bei Netflix verfügbar. Wer sie sehen will, muss abonnieren – das macht das Angebot unvergleichbar."
+  },
+  {
+    tag: "Product",
+    text: "Welche Funktion erfüllt der Netflix-Algorithmus im Bereich Produktpolitik?",
+    options: [
+      "Er legt automatisch den monatlichen Preis fest",
+      "Er empfiehlt Inhalte basierend auf dem Sehverhalten und erhöht so die Kundenbindung",
+      "Er entscheidet, welche Serien produziert werden sollen",
+      "Er sperrt Nutzer, die zu viel streamen"
+    ],
+    correct: 1,
+    explanation: "Machine Learning liefert personalisierte Empfehlungen. Dadurch fühlt sich das Angebot individuell an – Nutzer bleiben länger und kündigen seltener."
+  },
+  {
+    tag: "Price",
+    text: "Was ist der psychologische Effekt der monatlichen Kündbarkeit bei Netflix?",
+    options: [
+      "Kunden kündigen häufiger, weil die Hürde so niedrig ist",
+      "Netflix verliert dadurch regelmäßig Abonnenten an die Konkurrenz",
+      "Kunden fühlen sich nicht gefangen und kündigen deshalb paradoxerweise seltener",
+      "Die monatliche Kündbarkeit ist gesetzlich vorgeschrieben"
+    ],
+    correct: 2,
+    explanation: "Wer sich nicht durch einen Jahresvertrag gebunden fühlt, kündigt weniger impulsiv. Die niedrige Einstiegshürde senkt den Abschlusswiderstand – und die meisten bleiben dann doch."
+  },
+  {
+    tag: "Price",
+    text: "Warum bietet Netflix seine Dienste in Indien deutlich günstiger an als in Deutschland?",
+    options: [
+      "Weil der Content in Indien von schlechterer Qualität ist",
+      "Weil Netflix in Indien keine Eigenproduktionen anbietet",
+      "Um die lokale Kaufkraft zu berücksichtigen und möglichst viele Märkte zu erschließen",
+      "Weil die Internetkosten in Indien höher sind"
+    ],
+    correct: 2,
+    explanation: "Netflix orientiert seine Preise an der lokalen Kaufkraft. Günstigere Tarife ermöglichen es, riesige Märkte zu erschließen und die globale Abonnentenzahl zu maximieren."
+  },
+  {
+    tag: "Place",
+    text: "Womit begann Netflix ursprünglich, bevor es zum Streaming-Dienst wurde?",
+    options: [
+      "Als Kinokette in den USA",
+      "Als DVD-Versand per Post",
+      "Als Videospiel-Anbieter",
+      "Als Musikstreaming-Plattform"
+    ],
+    correct: 1,
+    explanation: "Netflix startete 1997 als DVD-Versanddienst per Post und erkannte früh das Potenzial des Internets für digitales Streaming."
+  },
+  {
+    tag: "Place",
+    text: "Was bedeutet der rote Netflix-Button auf TV-Fernbedienungen für die Distributionsstrategie?",
+    options: [
+      "Er dient ausschließlich als Werbemaßnahme für den Handel",
+      "Er senkt die Nutzungshürde auf null und macht Netflix zum ersten Griff am Abend",
+      "Er ersetzt die Netflix-App auf Smart-TVs vollständig",
+      "Er ist nur in Deutschland verfügbar"
+    ],
+    correct: 1,
+    explanation: "Der dedizierte Button ist Hardware-Integration als Vertriebskanal. Mit einem einzigen Druck öffnet sich Netflix – das ist Distributionspolitik in physischer Form."
+  },
+  {
+    tag: "Promotion",
+    text: "Was ist 'Retargeting' im Kontext von Netflix?",
+    options: [
+      "Netflix wirbt in Kinos für neue Serien",
+      "Automatisierte E-Mails an Ex-Kunden basierend auf deren früherem Sehverhalten",
+      "Die Schaltung von Anzeigen auf Plakatwänden",
+      "Rabattaktionen für Neukunden im ersten Monat"
+    ],
+    correct: 1,
+    explanation: "Retargeting bedeutet, frühere Nutzer gezielt wieder anzusprechen – z.B. mit 'Die neue Staffel ist da!' basierend auf dem, was sie zuletzt geschaut haben."
+  },
+  {
+    tag: "Promotion",
+    text: "Was ist das Ziel von Out-of-Home Events wie dem Stranger Things-Bus in Mailand?",
+    options: [
+      "Neue Abonnenten direkt vor Ort registrieren lassen",
+      "Immersive Markenerlebnisse schaffen, die Nutzer freiwillig in sozialen Medien teilen",
+      "Den Preis für Netflix-Abonnements zu erhöhen",
+      "Den Kauf von Merchandise-Produkten fördern"
+    ],
+    correct: 1,
+    explanation: "Reale Erlebnisse erzeugen Emotionen und Gesprächsstoff. Nutzer teilen Fotos freiwillig – das generiert organische Reichweite ohne zusätzliche Werbekosten."
+  },
+  {
+    tag: "Zusammenfassung",
+    text: "Was steht im Mittelpunkt aller vier Instrumente des Marketing-Mix bei Netflix?",
+    options: [
+      "Die Maximierung des Content-Katalogs",
+      "Die Gewinnung möglichst vieler Neukunden durch Werbung",
+      "Kundenbindung und langfristige Profitabilität",
+      "Die technische Verbesserung der Streaming-Qualität"
+    ],
+    correct: 2,
+    explanation: "Alle 4Ps greifen bei Netflix ineinander: Das Produkt rechtfertigt den Preis, der Place sichert Zugang, die Promotion erzeugt Nachfrage – immer mit dem Ziel: Kundenbindung & Profitabilität."
+  }
+];
+
+let answered = new Set();
+let score = 0;
+
+function buildQuiz() {
+  const container = document.getElementById('quiz');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+
+  questions.forEach((q, i) => {
+    const id = i + 1;
+    const optionsHTML = q.options.map((opt, j) => `
+      <div class="option" id="opt-${id}-${j}" onclick="choose(${id}, ${j})">
+        <div class="opt-letter">${letters[j]}</div>
+        <div class="opt-text">${opt}</div>
+      </div>
+    `).join('');
+
+    container.innerHTML += `
+      <div class="question-card" id="card-${id}">
+        <div class="q-header">
+          <div class="q-bar"></div>
+          <div class="q-content">
+            <div class="q-meta-col">
+              <div class="q-num">${String(id).padStart(2,'0')}</div>
+              <div class="q-tag">${q.tag}</div>
+            </div>
+            <div class="q-text">${q.text}</div>
+          </div>
+        </div>
+        <div class="options">${optionsHTML}</div>
+        <div class="feedback" id="fb-${id}"></div>
+      </div>
+    `;
+  });
+}
+
+function choose(qId, optIdx) {
+  if (answered.has(qId)) return;
+  answered.add(qId);
+
+  const q = questions[qId - 1];
+  const isCorrect = optIdx === q.correct;
+  if (isCorrect) score++;
+  document.getElementById('scoreNum').textContent = score;
+
+  for (let j = 0; j < 4; j++) {
+    const el = document.getElementById(`opt-${qId}-${j}`);
+    el.classList.add('disabled');
+    if (j === q.correct) el.classList.add('reveal-correct');
+  }
+
+  const chosen = document.getElementById(`opt-${qId}-${optIdx}`);
+  chosen.classList.remove('reveal-correct');
+  chosen.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+
+  document.getElementById(`card-${qId}`).classList.add(isCorrect ? 'correct' : 'wrong');
+
+  const fb = document.getElementById(`fb-${qId}`);
+  if (isCorrect) {
+    fb.className = 'feedback correct-fb show';
+    fb.innerHTML = `✓ Richtig! ${q.explanation}`;
+  } else {
+    const cl = ['A','B','C','D'][q.correct];
+    fb.className = 'feedback wrong-fb show';
+    fb.innerHTML = `✗ Leider falsch. <strong>Richtig wäre ${cl}.</strong> ${q.explanation}`;
+  }
+
+  updateProgress();
+  if (answered.size === questions.length) showResult();
+}
+
+function revealAll() {
+  questions.forEach((q, i) => {
+    const id = i + 1;
+    if (answered.has(id)) return;
+    answered.add(id);
+
+    for (let j = 0; j < 4; j++) {
+      const el = document.getElementById(`opt-${id}-${j}`);
+      el.classList.add('disabled');
+      if (j === q.correct) el.classList.add('reveal-correct');
+    }
+
+    const fb = document.getElementById(`fb-${id}`);
+    fb.className = 'feedback correct-fb show';
+    fb.innerHTML = `▶ Richtige Antwort: <strong>${['A','B','C','D'][q.correct]}.</strong> ${q.explanation}`;
+    document.getElementById(`card-${id}`).classList.add('correct');
+  });
+
+  updateProgress();
+  showResult();
+}
+
+function showResult() {
+  document.getElementById('resultScreen').classList.add('show');
+  document.getElementById('resultScore').textContent = `${score}/10`;
+  document.getElementById('btnReveal').disabled = true;
+  document.getElementById('btnReveal').style.opacity = '0.4';
+  document.getElementById('btnReveal').style.cursor = 'default';
+
+  let title, note, grade;
+  if      (score === 10) { title = "Perfekt! 🎉"; note = "Alle Fragen richtig – ihr kennt den Marketing-Mix in- und auswendig."; grade = "Note: <span>1</span>"; }
+  else if (score >= 8)   { title = "Sehr gut!";   note = "Fast alles richtig – ein sehr solides Verständnis der 4Ps.";         grade = "Note: <span>1–2</span>"; }
+  else if (score >= 6)   { title = "Gut gemacht!"; note = "Mehr als die Hälfte richtig – die Grundlagen sitzen.";              grade = "Note: <span>2–3</span>"; }
+  else if (score >= 4)   { title = "Nicht schlecht."; note = "Noch etwas Luft nach oben – die 4Ps nochmal wiederholen.";      grade = "Note: <span>3–4</span>"; }
+  else                   { title = "Nochmal üben!"; note = "Das Handout nochmal in Ruhe durchlesen – ihr schafft das!";       grade = "Note: <span>4–5</span>"; }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultNote').textContent = note;
+  document.getElementById('resultGrade').innerHTML = grade;
+}
+
+function updateProgress() {
+  const count = answered.size;
+  document.getElementById('answeredCount').textContent = count;
+  document.getElementById('progressFill').style.width = (count / 10 * 100) + '%';
+}
+
+function resetAll() {
+  answered.clear();
+  score = 0;
+  document.getElementById('scoreNum').textContent = '0';
+  document.getElementById('resultScreen').classList.remove('show');
+  const btn = document.getElementById('btnReveal');
+  btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+  updateProgress();
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>
